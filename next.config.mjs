@@ -1,4 +1,11 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  experimental: {
+    appDir: true,
+  },
+  images: {
+    domains: [], // Adicione domínios de imagens se necessário
+  },
+}
 
-export default nextConfig;
+export default nextConfig
