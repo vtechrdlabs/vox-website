@@ -1,22 +1,40 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import Image from "next/image";
 
 declare global {
   interface Window {
-    gtag?: (command: string, ...args: any[]) => void;
-    dataLayer?: any[];
+    gtag?: (
+      command: "event" | "config",
+      actionOrId: string,
+      params?: Record<string, string | number | boolean | undefined>
+    ) => void;
+    dataLayer?: Array<Record<string, unknown>>;
   }
 }
 
+type FormDataState = {
+  name: string;
+  whatsapp: string;
+  email: string;
+  monthlyRevenue: string;
+};
+
 const VoxContactForm = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataState>({
     name: "",
     whatsapp: "",
     email: "",
@@ -27,12 +45,12 @@ const VoxContactForm = () => {
   const { toast } = useToast();
   const { ref: elementRef, isVisible } = useScrollAnimation<HTMLDivElement>();
 
-  const revenueOptions = [
+  const revenueOptions: readonly string[] = [
     "De R$ 10 mil a R$ 50 mil",
-    "De R$ 50 mil a R$ 200 mil", 
+    "De R$ 50 mil a R$ 200 mil",
     "De R$ 200 mil a R$ 500 mil",
     "De R$ 500 mil a R$ 1 milhão",
-    "Acima de R$ 1 milhão"
+    "Acima de R$ 1 milhão",
   ];
 
   // 👉 Máscara de telefone
@@ -59,37 +77,37 @@ const VoxContactForm = () => {
     return regex.test(email);
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+  const handleInputChange = (field: keyof FormDataState, value: string) => {
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const trackLeadEvent = (leadData: typeof formData) => {
-    if (typeof window !== 'undefined' && window.dataLayer) {
+  const trackLeadEvent = (leadData: FormDataState) => {
+    if (typeof window !== "undefined" && window.dataLayer) {
       window.dataLayer.push({
-        event: 'lead_generated',
+        event: "lead_generated",
         lead_name: leadData.name,
         lead_email: leadData.email,
         lead_phone: leadData.whatsapp,
         lead_revenue: leadData.monthlyRevenue,
-        form_name: 'vox_elite_contact_form',
-        page_location: window.location.href
+        form_name: "vox_elite_contact_form",
+        page_location: window.location.href,
       });
     }
 
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'lead_generated', {
-        event_category: 'Lead',
-        event_label: 'Vox Elite Contact Form',
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "lead_generated", {
+        event_category: "Lead",
+        event_label: "Vox Elite Contact Form",
         custom_parameter_name: leadData.name,
-        custom_parameter_email: leadData.email
+        custom_parameter_email: leadData.email,
       });
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -114,35 +132,42 @@ const VoxContactForm = () => {
     }
 
     try {
-      const webhookResponse = await fetch('https://webhooks.vtechoficial.com/webhook/captacao/voxelite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          whatsapp: formData.whatsapp,
-          email: formData.email,
-          monthlyRevenue: formData.monthlyRevenue,
-          source: 'vox_elite_website',
-          timestamp: new Date().toISOString(),
-          page_url: typeof window !== 'undefined' ? window.location.href : ''
-        })
-      });
+      const webhookResponse = await fetch(
+        "https://webhooks.vtechoficial.com/webhook/captacao/voxelite",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name,
+            whatsapp: formData.whatsapp,
+            email: formData.email,
+            monthlyRevenue: formData.monthlyRevenue,
+            source: "vox_elite_website",
+            timestamp: new Date().toISOString(),
+            page_url: typeof window !== "undefined" ? window.location.href : "",
+          }),
+        }
+      );
 
       if (webhookResponse.ok) {
         trackLeadEvent(formData);
         setIsSubmitted(true);
         toast({
           title: "Formulário enviado com sucesso!",
-          description: "Em breve nossa equipe de consultores entrará em contato com você.",
+          description:
+            "Em breve nossa equipe de consultores entrará em contato com você.",
         });
         setFormData({ name: "", whatsapp: "", email: "", monthlyRevenue: "" });
       } else {
         throw new Error(`Erro ${webhookResponse.status}: ${webhookResponse.statusText}`);
       }
     } catch (error) {
+      // ✅ usa a variável para evitar @typescript-eslint/no-unused-vars
+      console.error("[VoxContactForm] submit error:", error);
       toast({
         title: "Erro ao enviar formulário",
-        description: "Tente novamente em alguns minutos ou entre em contato conosco.",
+        description:
+          "Tente novamente em alguns minutos ou entre em contato conosco.",
         variant: "destructive",
       });
     } finally {
@@ -158,21 +183,28 @@ const VoxContactForm = () => {
         <div className="absolute top-20 left-20 w-96 h-96 bg-vox-primary/5 rounded-full blur-3xl animate-float"></div>
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-vox-secondary/5 rounded-full blur-3xl animate-float"></div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10" id="contact-form">
+        <div
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+          id="contact-form"
+        >
           <div className="max-w-2xl mx-auto">
             <div className="bg-vox-dark/60 backdrop-blur-sm border border-vox-secondary/20 rounded-2xl p-8 shadow-2xl text-center">
               <div className="text-center mb-8">
-                <img 
-                  src="/lovable-uploads/df7a250b-5aaa-4638-bda3-b22f21047b7d.png" 
-                  alt="Vox Elite Logo" 
-                  className="w-32 h-32 mx-auto object-contain"
+                <Image
+                  src="/lovable-uploads/df7a250b-5aaa-4638-bda3-b22f21047b7d.png"
+                  alt="Vox Elite Logo"
+                  width={128}
+                  height={128}
+                  className="mx-auto object-contain"
                 />
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
                 Formulário enviado com sucesso!
               </h2>
               <p className="text-xl text-gray-300 mb-8">
-                Em breve nossa equipe de consultores especializados entrará em contato com você para agendar uma conversa exclusiva sobre como o Vox Elite pode transformar o seu negócio.
+                Em breve nossa equipe de consultores especializados entrará em
+                contato com você para agendar uma conversa exclusiva sobre como o
+                Vox Elite pode transformar o seu negócio.
               </p>
               <p className="text-lg text-vox-secondary">
                 Fique atento ao seu WhatsApp e e-mail!
@@ -191,39 +223,47 @@ const VoxContactForm = () => {
       <div className="absolute top-20 left-20 w-96 h-96 bg-vox-primary/5 rounded-full blur-3xl animate-float"></div>
       <div className="absolute bottom-20 right-20 w-80 h-80 bg-vox-secondary/5 rounded-full blur-3xl animate-float"></div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10" id="contact-form">
-        <div 
+      <div
+        className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+        id="contact-form"
+      >
+        <div
           ref={elementRef}
           className={`transition-all duration-1000 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
           }`}
         >
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              Preencha o formulário abaixo e nosso time de consultores entrará em contato com você
+              Preencha o formulário abaixo e nosso time de consultores entrará
+              em contato com você
             </h2>
           </div>
 
           <div className="max-w-2xl mx-auto">
             <div className="bg-vox-dark/60 backdrop-blur-sm border border-vox-secondary/20 rounded-2xl p-8 shadow-2xl">
               <div className="text-center mb-8">
-                <img 
-                  src="/lovable-uploads/df7a250b-5aaa-4638-bda3-b22f21047b7d.png" 
-                  alt="Vox Elite Logo" 
-                  className="w-32 h-32 mx-auto object-contain"
+                <Image
+                  src="/lovable-uploads/df7a250b-5aaa-4638-bda3-b22f21047b7d.png"
+                  alt="Vox Elite Logo"
+                  width={128}
+                  height={128}
+                  className="mx-auto object-contain"
                 />
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Nome */}
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-gray-300">Qual seu nome?</Label>
+                  <Label htmlFor="name" className="text-gray-300">
+                    Qual seu nome?
+                  </Label>
                   <Input
                     id="name"
                     type="text"
                     placeholder="Qual seu nome?"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     className="bg-vox-darker/50 border-vox-secondary/30 text-white placeholder:text-gray-500 focus:border-vox-primary h-12"
                     disabled={isLoading}
                   />
@@ -231,13 +271,17 @@ const VoxContactForm = () => {
 
                 {/* WhatsApp */}
                 <div className="space-y-2">
-                  <Label htmlFor="whatsapp" className="text-gray-300">Qual seu WhatsApp com DDD?</Label>
+                  <Label htmlFor="whatsapp" className="text-gray-300">
+                    Qual seu WhatsApp com DDD?
+                  </Label>
                   <Input
                     id="whatsapp"
                     type="tel"
                     placeholder="(81) 9.9853-6015"
                     value={formData.whatsapp}
-                    onChange={(e) => handleInputChange("whatsapp", formatPhoneNumber(e.target.value))}
+                    onChange={(e) =>
+                      handleInputChange("whatsapp", formatPhoneNumber(e.target.value))
+                    }
                     className="bg-vox-darker/50 border-vox-secondary/30 text-white placeholder:text-gray-500 focus:border-vox-primary h-12"
                     disabled={isLoading}
                   />
@@ -245,13 +289,15 @@ const VoxContactForm = () => {
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-300">Seu melhor E-mail</Label>
+                  <Label htmlFor="email" className="text-gray-300">
+                    Seu melhor E-mail
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="Seu melhor E-mail"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     className="bg-vox-darker/50 border-vox-secondary/30 text-white placeholder:text-gray-500 focus:border-vox-primary h-12"
                     disabled={isLoading}
                   />
@@ -260,13 +306,21 @@ const VoxContactForm = () => {
                 {/* Faturamento */}
                 <div className="space-y-2">
                   <Label className="text-gray-300">Faturamento Médio no Mês</Label>
-                  <Select onValueChange={(value) => handleInputChange('monthlyRevenue', value)} disabled={isLoading}>
+                  <Select
+                    value={formData.monthlyRevenue}
+                    onValueChange={(value) => handleInputChange("monthlyRevenue", value)}
+                    disabled={isLoading}
+                  >
                     <SelectTrigger className="bg-vox-darker/50 border-vox-secondary/30 text-white focus:border-vox-primary h-12">
                       <SelectValue placeholder="Faturamento Médio no Mês" />
                     </SelectTrigger>
                     <SelectContent className="bg-vox-darker border-vox-secondary/30">
                       {revenueOptions.map((option) => (
-                        <SelectItem key={option} value={option} className="text-white hover:bg-vox-primary/20">
+                        <SelectItem
+                          key={option}
+                          value={option}
+                          className="text-white hover:bg-vox-primary/20"
+                        >
                           {option}
                         </SelectItem>
                       ))}
@@ -282,7 +336,7 @@ const VoxContactForm = () => {
                   disabled={isLoading}
                   className="w-full text-sm sm:text-base md:text-xl"
                 >
-                  {isLoading ? 'ENVIANDO...' : 'QUERO GARANTIR MINHA VAGA'}
+                  {isLoading ? "ENVIANDO..." : "QUERO GARANTIR MINHA VAGA"}
                 </Button>
 
                 {/* Aviso */}
@@ -291,7 +345,9 @@ const VoxContactForm = () => {
                     Ao me cadastrar, autorizo o recebimento de comunicações
                     <br />
                     (WhatsApp, SMS, e-mail e ligação).{" "}
-                    <span className="text-red-400 cursor-pointer hover:underline">[Saiba mais]</span>
+                    <span className="text-red-400 cursor-pointer hover:underline">
+                      [Saiba mais]
+                    </span>
                   </p>
                 </div>
               </form>

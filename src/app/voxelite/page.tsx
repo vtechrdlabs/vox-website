@@ -6,9 +6,6 @@ import { VoxMentors } from "@/components/VoxMentors";
 import { VoxTestimonials } from "@/components/VoxTestimonials";
 import { VoxFAQ } from "@/components/VoxFAQ";
 import VoxContactForm from "@/components/VoxContactForm";
-import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
-import Link from "next/link";
 
 export default function HomePage() {
   return (
