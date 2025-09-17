@@ -16,8 +16,8 @@ export const VoxMentors = () => {
       "Mentor de Negócios e Carreiras no G4 Educação desde 2019, já impactou mais de 200 empresários.",
     mentor_2_description_3: "Especialista em estratégia, gestão e pessoas.",
     mentor_2_description_4: "Palestrante em negócios, comportamento humano e comunicação de alto impacto.",
-    mentor_1_image: "/rodrigo-fernandes.jpg",
-    mentor_2_image: "/cleo-scarabello.jpg",
+    mentor_1_image: "/rodrigo-fernandes.png",
+    mentor_2_image: "/cleo-scarabello.png",
   };
 
   type Mentor = {
