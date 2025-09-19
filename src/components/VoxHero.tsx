@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { useScrollAnimation, useParallax } from "@/hooks/useScrollAnimation";
@@ -19,8 +19,9 @@ export const VoxHero = () => {
     hero_image: "",
   };
 
-  // Removido isPlaying (não era usado)
-  const [showVideo, setShowVideo] = useState(true); // inicia com vídeo visível
+  const [showVideo, setShowVideo] = useState(false); // inicia como false
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const videoRef = useRef<HTMLDivElement>(null);
 
   // Imagens
@@ -35,6 +36,19 @@ export const VoxHero = () => {
   const videoContainerRef = useScrollAnimation<HTMLDivElement>({ delay: 700 });
   const buttonRef = useScrollAnimation<HTMLButtonElement>({ delay: 900 });
   const parallaxRef = useParallax<HTMLDivElement>(0.2);
+
+  // Efeito para iniciar o vídeo automaticamente quando o container ficar visível
+  useEffect(() => {
+    if (videoContainerRef.isVisible && !videoLoaded) {
+      // Pequeno delay para garantir que a animação termine
+      const timer = setTimeout(() => {
+        setShowVideo(true);
+        setVideoLoaded(true);
+      }, 800); // Aguarda a animação do container terminar
+
+      return () => clearTimeout(timer);
+    }
+  }, [videoContainerRef.isVisible, videoLoaded]);
 
   const scrollToForm = () => {
     const formElement = document.getElementById("contact-form");
@@ -64,12 +78,14 @@ export const VoxHero = () => {
       const videoId = url.includes("youtu.be")
         ? url.split("youtu.be/")[1]?.split("?")[0]
         : url.split("v=")[1]?.split("&")[0];
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+      // Adicionado autoplay=1 para iniciar automaticamente
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&mute=1`;
     }
 
     if (isVimeoUrl(url)) {
       const videoId = url.split("/").pop()?.split("?")[0];
-      return `https://player.vimeo.com/video/${videoId}?autoplay=1&badge=0&autopause=0&playsinline=1`;
+      // Adicionado autoplay=1 e muted=1 para iniciar automaticamente
+      return `https://player.vimeo.com/video/${videoId}?autoplay=1&badge=0&autopause=0&playsinline=1&muted=1`;
     }
 
     return url;
@@ -106,7 +122,6 @@ export const VoxHero = () => {
               logoRef.isVisible ? "animate-scale-in" : "opacity-0 scale-90"
             }`}
           >
-            {/* next/image no lugar de <img> */}
             <Image
               src="/lovable-uploads/b7c0ef70-756b-46fe-8952-75217a609b83.png"
               alt="Vox Logo"
@@ -153,7 +168,7 @@ export const VoxHero = () => {
             >
               <div ref={videoRef}>
                 {!showVideo ? (
-                  // Thumbnail com botão play
+                  // Thumbnail com botão play (só aparece até o vídeo carregar)
                   <div className="absolute inset-0">
                     <Image
                       src={videoThumbnail}
@@ -173,7 +188,7 @@ export const VoxHero = () => {
                     </div>
                   </div>
                 ) : (
-                  // Vídeo incorporado
+                  // Vídeo incorporado com autoplay
                   <div className="absolute inset-0">
                     {isYouTubeUrl(content.video_url) || isVimeoUrl(content.video_url) ? (
                       <iframe
@@ -182,12 +197,15 @@ export const VoxHero = () => {
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
+                        title="Vox Elite Video"
                       />
                     ) : (
                       <video
                         src={content.video_url}
                         className="w-full h-full object-cover"
                         controls
+                        autoPlay
+                        muted
                         playsInline
                         preload="metadata"
                       />
