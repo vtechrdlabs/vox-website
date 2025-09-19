@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export default function HomePage() {
   const [email, setEmail] = useState("");
@@ -30,10 +31,13 @@ export default function HomePage() {
         <div className="rounded-2xl bg-vox-dark/60 backdrop-blur-sm border border-vox-secondary/20 p-12 shadow-2xl">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img
+            <Image
               src="/lovable-uploads/b7c0ef70-756b-46fe-8952-75217a609b83.png"
               alt="Logo"
-              className="h-20 w-auto object-contain"
+              width={160} // Use a largura real da sua imagem
+              height={80}  // Use a altura real da sua imagem
+              className="h-20 w-auto object-contain" // Pode manter as classes para responsividade
+              priority // Adicione 'priority' se a imagem estiver na primeira dobra (LCP)
             />
           </div>
 

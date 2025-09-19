@@ -21,7 +21,6 @@ export const VoxHero = () => {
 
   const [showVideo, setShowVideo] = useState(false); // inicia como false
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const videoRef = useRef<HTMLDivElement>(null);
 
   // Imagens
